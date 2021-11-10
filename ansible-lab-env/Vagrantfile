@@ -3,31 +3,43 @@
 Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.ssh.insert_key = false
+  config.vm.box_check_update = false
+  config.vm.boot_timeout = 1440
   config.vm.provider "virtualbox" do |vb|
-    vb.memory = "1024"
+    vb.memory = "512"
     vb.cpus = 1
-    #vb.gui = true
+  end
+
+  # Master
+  config.vm.define "master" do |master|
+    master.vm.box = "ubuntu/bionic64"
+    master.vm.hostname = "test-master.dev"
+    master.vm.network :private_network, ip: "192.168.60.3"
+    master.vm.provision "shell", inline: <<-SHELL
+      sudo apt update -y
+      sudo apt install ansible -y
+    SHELL
   end
 
   # Application server 1.
   config.vm.define "app1" do |app1|
     app1.vm.hostname = "test-app1.dev"
     app1.vm.box = "geerlingguy/centos7"
-    app1.vm.network :private_network, ip: "192.168.60.4"
+    app1.vm.network :private_network, ip: "10.10.60.4"
   end
 
   # Application server 2.
   config.vm.define "app2" do |app2|
     app2.vm.hostname = "test-app2.dev"
     app2.vm.box = "geerlingguy/centos7"
-    app2.vm.network :private_network, ip: "192.168.60.5"
+    app2.vm.network :private_network, ip: "10.10.60.5"
   end
 
   # Database server.
   config.vm.define "db" do |db|
     db.vm.hostname = "test-db.dev"
     db.vm.box = "geerlingguy/centos7"
-    db.vm.network :private_network, ip: "192.168.60.6"
+    db.vm.network :private_network, ip: "10.10.60.6"
   end
 
   # Provisioning configuration for ansible
