@@ -20,9 +20,6 @@ Vagrant.configure("2") do |config|
       yum -y install ansible
     SHELL
     
-    master.vm.provision "ansible" do |ansible|
-      ansible.playbook = "playbook.yml"
-    end
   end
 
   # Application server 1.
