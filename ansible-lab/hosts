@@ -1,18 +1,12 @@
-[app]
-10.10.60.4
-10.10.60.5
-
 [db]
-10.10.60.6
+12.16.56.101
 
-[multi:children]
-app
-db
+[web]
+12.16.56.102
+12.16.56.103
 
-[multi:vars]
-host_key_checking=false
-ansible_connection=ssh
-ansible_ssh_pass=vagrant
-ansible_user=vagrant
-#ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key
-#ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+[lb]
+12.16.56.104
+
+[queue]
+12.16.56.105
