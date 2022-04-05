@@ -1,50 +1,64 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
 Vagrant.configure("2") do |config|
-  # boxes at https://vagrantcloud.com/search.
-  # config.ssh.insert_key = false
-  config.vm.box_check_update = false
-  config.vm.boot_timeout = 1440
-  config.vm.provider "virtualbox" do |vb|
-    vb.memory = "512"
-    vb.cpus = 1
+  servers=[
+    {
+      :hostname => "database",
+      :box => "centos/7",
+      :ip => "12.16.56.101",
+      :ssh_port => '2210'
+    },
+    {
+      :hostname => "webserver-1",
+      :box => "bento/ubuntu-18.04",
+      :ip => "12.16.56.102",
+      :ssh_port => '2211'
+    },
+    {
+      :hostname => "webserver-2",
+      :box => "bento/ubuntu-18.04",
+      :ip => "12.16.56.103",
+      :ssh_port => '2212'
+    },
+    {
+      :hostname => "loadbalancer",
+      :box => "bento/ubuntu-18.04",
+      :ip => "12.16.56.104",
+      :ssh_port => '2213'
+    },
+    {
+      :hostname => "queue",
+      :box => "centos/7",
+      :ip => "12.16.56.105",
+      :ssh_port => '2214'
+    },
+    {
+      :hostname => "control",
+      :box => "centos/7",
+      :ip => "12.16.56.106",
+      :ssh_port => '2215'
+    }
+
+  ]
+
+  servers.each do |machine|
+
+    config.vm.define machine[:hostname] do |node|
+      node.vm.box = machine[:box]
+      node.vm.hostname = machine[:hostname]
+    
+      node.vm.network :private_network, ip: machine[:ip]
+      node.vm.network "forwarded_port", guest: 22, host: machine[:ssh_port], id: "ssh"
+
+      node.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--memory", 512]
+        v.customize ["modifyvm", :id, "--name", machine[:hostname]]
+      end
+    end
   end
 
-  # Master
-  config.vm.define "master" do |master|
-    master.vm.box = "geerlingguy/centos8"
-    master.vm.hostname = "master"
-    #master.vm.synced_folder ".", "/home/vagrant"
-    master.vm.network :private_network, ip: "10.10.60.3"
-    master.vm.provision "shell", inline: <<-SHELL
-      yum -y install epel-release
-      yum -y install ansible
-      sudo sed -e 's/#host_key_checking/host_key_checking/' /etc/ansible/ansible.cfg
-      sudo sed 's/#deprecation_warnings = True/deprecation_warnings = False/' /etc/ansible/ansible.cfg
-      sudo echo "[app]\n10.10.60.4\n10.10.60.5\n\n[db]\n10.10.60.6\n\n[multi:children]\napp\ndb\n\n[multi:vars]\nhost_key_checking=false\nansible_connection=ssh\nansible_ssh_pass=vagrant\nansible_user=vagrant" >> /etc/ansible/hosts
-    SHELL
-  end
+  id_rsa_key_pub = File.read(File.join(Dir.home, ".ssh", "id_rsa.pub"))
 
-  # Application server 1.
-  config.vm.define "app1" do |app1|
-    app1.vm.hostname = "app1"
-    app1.vm.box = "geerlingguy/centos8"
-    app1.vm.network :private_network, ip: "10.10.60.4"
-    #config.vm.provision :shell, path: "app.sh"
-  end
+  config.vm.provision :shell,
+        :inline => "echo 'appending SSH public key to ~vagrant/.ssh/authorized_keys' && echo '#{id_rsa_key_pub }' >> /home/vagrant/.ssh/authorized_keys && chmod 600 /home/vagrant/.ssh/authorized_keys"
 
-  # Application server 2.
-  config.vm.define "app2" do |app2|
-    app2.vm.hostname = "app2"
-    app2.vm.box = "geerlingguy/centos8"
-    app2.vm.network :private_network, ip: "10.10.60.5"
-  end
-
-  # Database server.
-  config.vm.define "db" do |db|
-    db.vm.hostname = "db"
-    db.vm.box = "geerlingguy/centos8"
-    db.vm.network :private_network, ip: "10.10.60.6"
-  end
-
+  config.ssh.insert_key = false
 end

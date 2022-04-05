@@ -1,5 +1,5 @@
 nodes = [
-        { :hostname => 'app1', :ip => '20.10.10.5', :memory => 1024, :cpu => 1, :boxname => "ubuntu/trusty64"},
+        { :hostname => 'app1', :ip => '20.10.10.5', :memory => 1024, :cpu => 1, :boxname => "ubuntu/trusty64", :ssh_port => '2210'},
         # { :hostname => 'app2', :ip => '20.10.10.6', :memory => 1024, :cpu => 1, :boxname => "ubuntu/xenial64"}
 ]
 
